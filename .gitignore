@@ -1,0 +1,16 @@
+node_modules/
+.vercel/
+.tanstack/
+screenshots/
+artifacts/
+.grok/preview.log
+.grok/previews/
+.grok/status
+.grok/skills/
+.grok/references/
+AGENTS.md
+*.log
+.env
+.env.*
+.DS_Store
+.node_modules.lock
