@@ -1,4 +1,5 @@
 import { courseLabel, formatSpeed, type AisSnapshot, type TrackPoint } from "@/lib/chart-format";
+import { SEA_BEASTS } from "@/lib/sea-beasts";
 
 export type Projector = (lon: number, lat: number) => { x: number; y: number } | null;
 
@@ -78,12 +79,14 @@ export function drawChartInk(
   bounds: { west: number; south: number; east: number; north: number } | null,
   data: AisSnapshot,
   ship: HTMLImageElement | null,
+  beasts: Array<HTMLImageElement | null>,
   now: number,
   reduceMotion: boolean,
 ): number {
   ctx.clearRect(0, 0, width, height);
   if (bounds) drawGraticule(ctx, width, height, project, bounds);
   drawRhumbs(ctx, width, height);
+  drawBeasts(ctx, width, height, project, bounds, beasts);
 
   const pts = screenTrack(trackFromNow(data), project);
   const { progress, alpha } = penPhase(now, reduceMotion);
@@ -164,6 +167,32 @@ function drawRhumbs(ctx: CanvasRenderingContext2D, width: number, height: number
     ctx.stroke();
   }
   ctx.restore();
+}
+
+function drawBeasts(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  project: Projector,
+  bounds: { west: number; south: number; east: number; north: number } | null,
+  beasts: Array<HTMLImageElement | null>,
+) {
+  const span = bounds ? Math.max(0.25, Math.abs(bounds.east - bounds.west)) : 1.2;
+  const size = Math.min(168, Math.max(48, (width / span) * 0.14));
+  for (let i = 0; i < SEA_BEASTS.length; i++) {
+    const image = beasts[i];
+    const spot = SEA_BEASTS[i];
+    if (!image || !image.complete || image.naturalWidth < 1 || !spot) continue;
+    const pt = project(spot.lon, spot.lat);
+    if (!pt) continue;
+    const w = size;
+    const h = size * (image.naturalHeight / image.naturalWidth);
+    if (pt.x < -w || pt.y < -h || pt.x > width + w || pt.y > height + h) continue;
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(image, pt.x - w / 2, pt.y - h / 2, w, h);
+    ctx.restore();
+  }
 }
 
 function drawWake(ctx: CanvasRenderingContext2D, pts: Pt[], progress: number, alpha: number) {

@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#e6d3a8"/>
-  <circle cx="32" cy="32" r="22" fill="none" stroke="#2a2118" stroke-width="3"/>
-  <path d="M32 12 L36 32 L32 52 L28 32 Z" fill="#7a2e24"/>
-  <path d="M12 32 L32 28 L52 32 L32 36 Z" fill="#2a2118"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Parcel of Rogues">
+  <rect width="32" height="32" rx="7" fill="#2a2118"/>
+  <path fill="#e6d3a8" d="M4.5 22.2 8.4 26.4h15.2l3.9-4.2z"/>
+  <rect x="15.1" y="5.2" width="1.8" height="17.2" fill="#8d6b32"/>
+  <path fill="#e6d3a8" d="M16.9 6 26 13.4H16.9z"/>
+  <path fill="#7e978c" d="M16.9 14.2 24.6 20.6H16.9z"/>
+  <path fill="#7a2e24" d="M15.4 5 21 7.2 15.4 9.2z"/>
 </svg>

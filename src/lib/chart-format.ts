@@ -95,7 +95,7 @@ export function trackDistanceNm(points: TrackPoint[]): number {
 }
 
 export function flagName(flag: string | null): string {
-  if (!flag) return "unknown flag";
-  const names: Record<string, string> = { US: "United States", USA: "United States" };
-  return names[flag.toUpperCase()] ?? flag;
+  if (!flag) return "Unknown ensign";
+  if (flag === "US" || flag === "USA") return "United States";
+  return flag;
 }

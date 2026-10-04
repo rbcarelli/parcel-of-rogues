@@ -1,122 +1,141 @@
 import type { StyleSpecification } from "maplibre-gl";
 
-const INK = "#2a2118";
-const SEA = "#6f8a82";
-const LAND = "#e6d3a8";
+const INK = "#1c1610";
+const LAND = "#f3e6c4";
+const SEA = "#5d7f76";
+const WOOD = "#c9b48a";
+const SAND = "#ead7ae";
 const HALO = "#f3e6c4";
 
-const placeText = ["coalesce", ["get", "name:en"], ["get", "name"]];
+const placeText = [
+  "case",
+  ["has", "name:nonlatin"],
+  ["get", "name:latin"],
+  ["coalesce", ["get", "name_en"], ["get", "name"]],
+] as const;
 
-export const vintageStyle = {
+export const vintageStyle: StyleSpecification = {
   version: 8,
-  name: "Parcel of Rogues",
-  glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   sources: {
-    osm: {
+    openmaptiles: {
       type: "vector",
       url: "https://tiles.openfreemap.org/planet",
     },
   },
+  glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   layers: [
     { id: "background", type: "background", paint: { "background-color": LAND } },
     {
-      id: "landcover",
+      id: "landcover-wood",
       type: "fill",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "landcover",
-      paint: {
-        "fill-color": [
-          "match",
-          ["get", "class"],
-          "wood",
-          "#d4c197",
-          "grass",
-          "#dcc9a0",
-          "sand",
-          "#e8d4aa",
-          "#e0cba3",
-        ],
-        "fill-opacity": 0.55,
-      },
+      filter: ["==", ["get", "class"], "wood"],
+      paint: { "fill-color": WOOD, "fill-opacity": 0.55 },
     },
     {
-      id: "landuse",
+      id: "landcover-grass",
       type: "fill",
-      source: "osm",
-      "source-layer": "landuse",
-      paint: { "fill-color": "#d9c49a", "fill-opacity": 0.35 },
+      source: "openmaptiles",
+      "source-layer": "landcover",
+      filter: ["in", ["get", "class"], ["literal", ["grass", "scrub"]]],
+      paint: { "fill-color": "#d5c396", "fill-opacity": 0.4 },
+    },
+    {
+      id: "landcover-sand",
+      type: "fill",
+      source: "openmaptiles",
+      "source-layer": "landcover",
+      filter: ["==", ["get", "class"], "sand"],
+      paint: { "fill-color": SAND, "fill-opacity": 0.8 },
     },
     {
       id: "water",
       type: "fill",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "water",
-      paint: { "fill-color": SEA, "fill-antialias": true, "fill-opacity": 0.92 },
-    },
-    {
-      id: "waterway",
-      type: "line",
-      source: "osm",
-      "source-layer": "waterway",
-      paint: {
-        "line-color": SEA,
-        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.4, 14, 2.2],
-      },
+      filter: ["!=", ["get", "brunnel"], "tunnel"],
+      paint: { "fill-color": SEA, "fill-outline-color": INK },
     },
     {
       id: "coastline",
       type: "line",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "water",
+      filter: ["!=", ["get", "brunnel"], "tunnel"],
       paint: {
         "line-color": INK,
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 8, 1.4, 12, 2.2, 15, 3.1],
-        "line-opacity": 0.92,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1.4, 7, 2.2, 11, 3.4, 14, 4.5],
       },
+    },
+    {
+      id: "coastline-shade",
+      type: "line",
+      source: "openmaptiles",
+      "source-layer": "water",
+      filter: ["!=", ["get", "brunnel"], "tunnel"],
+      paint: {
+        "line-color": "#6b5344",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.6, 11, 1.4],
+        "line-offset": 1.2,
+        "line-opacity": 0.85,
+      },
+    },
+    {
+      id: "waterway",
+      type: "line",
+      source: "openmaptiles",
+      "source-layer": "waterway",
+      paint: { "line-color": "#6d8a80", "line-width": 0.8, "line-opacity": 0.7 },
     },
     {
       id: "boundary",
       type: "line",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "boundary",
-      filter: ["==", ["get", "admin_level"], 2],
+      filter: ["<=", ["get", "admin_level"], 4],
       paint: {
-        "line-color": "rgba(42, 33, 24, 0.28)",
-        "line-width": 1,
-        "line-dasharray": [3, 2],
+        "line-color": INK,
+        "line-width": 0.6,
+        "line-opacity": 0.28,
+        "line-dasharray": [2, 2],
       },
     },
     {
-      id: "roads",
-      type: "line",
-      source: "osm",
-      "source-layer": "transportation",
-      minzoom: 9,
-      paint: {
-        "line-color": "rgba(42, 33, 24, 0.22)",
-        "line-width": ["interpolate", ["linear"], ["zoom"], 9, 0.3, 14, 1.4],
-      },
-    },
-    {
-      id: "buildings",
-      type: "fill",
-      source: "osm",
-      "source-layer": "building",
-      minzoom: 12,
-      paint: { "fill-color": "rgba(42, 33, 24, 0.12)" },
-    },
-    {
-      id: "place-city",
+      id: "label-state",
       type: "symbol",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "place",
-      filter: ["in", ["get", "class"], ["literal", ["city", "town"]]],
+      minzoom: 3,
+      filter: ["==", ["get", "class"], "state"],
       layout: {
-        "text-field": placeText,
-        "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 11, 10, 16],
+        "text-field": placeText as unknown as string,
+        "text-font": ["Noto Sans Italic"],
+        "text-size": 13,
+        "text-letter-spacing": 0.18,
         "text-transform": "uppercase",
-        "text-letter-spacing": 0.06,
+        "text-max-width": 8,
+      },
+      paint: {
+        "text-color": INK,
+        "text-halo-color": HALO,
+        "text-halo-width": 1.2,
+        "text-opacity": 0.55,
+      },
+    },
+    {
+      id: "label-city",
+      type: "symbol",
+      source: "openmaptiles",
+      "source-layer": "place",
+      minzoom: 4,
+      filter: ["==", ["get", "class"], "city"],
+      layout: {
+        "text-field": placeText as unknown as string,
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 10, 16],
+        "text-letter-spacing": 0.08,
+        "text-transform": "uppercase",
         "text-max-width": 8,
       },
       paint: {
@@ -126,14 +145,14 @@ export const vintageStyle = {
       },
     },
     {
-      id: "place-village",
+      id: "label-town",
       type: "symbol",
-      source: "osm",
+      source: "openmaptiles",
       "source-layer": "place",
-      filter: ["==", ["get", "class"], "village"],
-      minzoom: 9,
+      minzoom: 8,
+      filter: ["==", ["get", "class"], "town"],
       layout: {
-        "text-field": placeText,
+        "text-field": placeText as unknown as string,
         "text-font": ["Noto Sans Italic"],
         "text-size": 12,
         "text-max-width": 8,
@@ -146,4 +165,4 @@ export const vintageStyle = {
       },
     },
   ],
-} as StyleSpecification;
+};

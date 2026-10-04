@@ -12,5 +12,6 @@ AGENTS.md
 *.log
 .env
 .env.*
+data/vessel-hours.json
 .DS_Store
 .node_modules.lock

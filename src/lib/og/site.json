@@ -1,5 +1,6 @@
 {
-  "name": "Parcel of Rogues",
-  "description": "Living pirate chart of the sailing vessel Parcel of Rogues.",
-  "type": "website"
+  "title": "Parcel of Rogues",
+  "type": "x:game",
+  "card": "custom",
+  "color": "2A2118"
 }

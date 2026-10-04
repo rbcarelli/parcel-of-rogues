@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, Route } from "lucide-react";
 import { drawChartInk } from "@/components/chart-ink";
-import { type AisSnapshot } from "@/lib/chart-format";
+import { haversineNm, type AisSnapshot } from "@/lib/chart-format";
+import { SEA_BEASTS } from "@/lib/sea-beasts";
 import { vintageStyle } from "@/lib/vintage-style";
 import { getVesselAis } from "@/lib/vessel-ais";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -21,6 +22,7 @@ type MapHandle = {
   getZoom: () => number;
   unproject: (point: [number, number]) => { lng: number; lat: number };
   easeTo: (options: {
+    center?: [number, number];
     zoom?: number;
     around?: { lng: number; lat: number };
     duration?: number;
@@ -65,6 +67,7 @@ export function PirateChart({ initial }: { initial: AisSnapshot }) {
   const mapRef = useRef<MapHandle | null>(null);
   const dataRef = useRef(initial);
   const shipRef = useRef<HTMLImageElement | null>(null);
+  const beastRef = useRef<Array<HTMLImageElement | null>>(SEA_BEASTS.map(() => null));
   const [data, setData] = useState(initial);
 
   useEffect(() => {
@@ -75,6 +78,11 @@ export function PirateChart({ initial }: { initial: AisSnapshot }) {
     const img = new Image();
     img.src = "/chart/sloop.png";
     shipRef.current = img;
+    SEA_BEASTS.forEach((beast, index) => {
+      const icon = new Image();
+      icon.src = beast.icon;
+      beastRef.current[index] = icon;
+    });
   }, []);
 
   useEffect(() => {
@@ -119,6 +127,7 @@ export function PirateChart({ initial }: { initial: AisSnapshot }) {
         { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
         dataRef.current,
         shipRef.current,
+        beastRef.current,
         time,
         reduce,
       );
@@ -178,13 +187,25 @@ export function PirateChart({ initial }: { initial: AisSnapshot }) {
       try {
         const next = await getVesselAis();
         if (stopped) return;
+        const prev = dataRef.current;
+        const moved = haversineNm(prev, next) > 0.2;
         dataRef.current = next;
         setData(next);
+        const map = mapRef.current;
+        if (!map || !moved) return;
+        const bounds = map.getBounds();
+        const inside =
+          next.lon >= bounds.getWest() &&
+          next.lon <= bounds.getEast() &&
+          next.lat >= bounds.getSouth() &&
+          next.lat <= bounds.getNorth();
+        if (!inside) map.easeTo({ center: [next.lon, next.lat], duration: 700 });
       } catch {
         /* keep the last good sight */
       }
     };
-    const id = window.setInterval(() => void pull(), 60_000);
+    void pull();
+    const id = window.setInterval(() => void pull(), 20_000);
     return () => {
       stopped = true;
       window.clearInterval(id);
@@ -303,7 +324,6 @@ export function PirateChart({ initial }: { initial: AisSnapshot }) {
         <div ref={mapNode} className="chart-map" />
         <div className="chart-stain" aria-hidden="true" />
         <canvas ref={canvasRef} className="chart-ink" />
-        <img className="chart-serpent" src="/chart/serpent.png" alt="" />
         <img className="chart-compass" src="/chart/compass.png" alt="" />
         <div className="chart-frame" aria-hidden="true" />
         <div ref={gestureRef} className="chart-gestures" aria-label="Chart. Drag to pan, scroll or pinch to zoom." />
